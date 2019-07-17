@@ -21,7 +21,7 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         
         //play()
-        audioSetup()
+        self.audioSetup()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -29,6 +29,7 @@ class MainViewController: UIViewController {
     }
     
     func audioSetup() {
+        print("audioSetup()")
         let sess = AVAudioSession.sharedInstance()
         try! sess.setCategory(AVAudioSession.Category(rawValue: convertFromAVAudioSessionCategory(AVAudioSession.Category.playAndRecord)))
         do {
@@ -53,27 +54,33 @@ class MainViewController: UIViewController {
             componentFlags:        0,
             componentFlagsMask:    0 )
         
+        print("registerSubclass")
+        // MyV3AudioUnit5.self
         AUAudioUnit.registerSubclass(MyV3AudioUnit5.self,
                                      as:        compDesc,
-                                     name:      "MyV3AudioUnit5",   // my AUAudioUnit subclass
+                                     name:      "MyV3AudioUnit5",   // "My3AudioUnit5" my AUAudioUnit subclass
             version:   1 )
         
         let outFormat = audioEngine.outputNode.outputFormat(forBus: 0)
         
+        print("intantiate")
         AVAudioUnit.instantiate(with: compDesc,
                                 options: .init(rawValue: 0)) { (audiounit, error) in
                                     
+                                    print("completed: \(audiounit) \(error)")
                                     self.myAUNode = audiounit   // save AVAudioUnit
-                                    
+                                    print("completed 1")
                                     self.audioEngine.attach(audiounit!)
-                                    
+                                    print("completed 2")
                                     self.audioEngine.connect(audiounit!,
                                                               to: self.audioEngine.mainMixerNode,
                                                               format: outFormat)
         }
+        print("end audioSetup")
     }
     
     func audioStart() {
+        print("audioStart()")
 //        let bus0 : AVAudioNodeBus   =  0    // output of the inputNode
 //        let inputNode   =  audioEngine!.inputNode
 //        let inputFormat =  inputNode.outputFormat(forBus: bus0)

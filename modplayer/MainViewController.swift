@@ -56,9 +56,9 @@ class MainViewController: UIViewController {
         
         print("registerSubclass")
         // MyV3AudioUnit5.self
-        AUAudioUnit.registerSubclass(MyV3AudioUnit5.self,
+        AUAudioUnit.registerSubclass(MyAudioUnit.self,
                                      as:        compDesc,
-                                     name:      "MyV3AudioUnit5",   // "My3AudioUnit5" my AUAudioUnit subclass
+                                     name:      "MyAudioUnit",   // "My3AudioUnit5" my AUAudioUnit subclass
             version:   1 )
         
         let outFormat = audioEngine.outputNode.outputFormat(forBus: 0)

@@ -35,8 +35,11 @@ class Channel {
     var data:UInt8 = 0
     var done = false
     var off = false
+    var loopStart = 0
+    var loopCount = 0
+    var loops = 0
     
-    init(sample: Int = -1, samplePos: Float = 0.0, period:Float = 0.0, volume: UInt8 = 64, slideTo: Int = -1, slideSpeed: Int = 0, delay: Int = 0, vform: Float = 0.0, vdepth: Int = 0, vspeed: Int = 0, vpos:Int = 0, loopInitiated: Bool = false, id: Int = 0, cmd: UInt8 = 0, data: UInt8 = 0, done: Bool = false, off: Bool = false) {
+    init(sample: Int = -1, samplePos: Float = 0.0, period:Float = 0.0, volume: UInt8 = 64, slideTo: Int = -1, slideSpeed: Int = 0, delay: Int = 0, vform: Float = 0.0, vdepth: Int = 0, vspeed: Int = 0, vpos:Int = 0, loopInitiated: Bool = false, id: Int = 0, cmd: UInt8 = 0, data: UInt8 = 0, done: Bool = false, off: Bool = false, loopStart: Int = 0, loopCount: Int = 0, loops: Int = 0) {
         self.sample = sample
         self.samplePos = samplePos
         self.period = period
@@ -53,6 +56,9 @@ class Channel {
         self.data = data
         self.done = done
         self.off = false
+        self.loopStart = loopStart
+        self.loopCount = loopCount
+        self.loops = loops
     }
 }
 
@@ -328,7 +334,10 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                 id: i,
                 cmd: 0,
                 data: 0,
-                done: false
+                done: false,
+                loopStart: 0,
+                loopCount: 0,
+                loops: 0
             )
     
             self.channels[i] = channel

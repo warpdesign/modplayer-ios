@@ -18,6 +18,7 @@
 		B3C3D53F22DDEF8900FA72C7 /* modplayerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D53E22DDEF8900FA72C7 /* modplayerUITests.swift */; };
 		B3C3D54D22DDEFC100FA72C7 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D54C22DDEFC100FA72C7 /* MainViewController.swift */; };
 		B3C3D55122DE111300FA72C7 /* CustomAudioUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D55022DE111300FA72C7 /* CustomAudioUnit.swift */; };
+		B3C8AE3622E0BD56008EA22D /* Effects.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C8AE3522E0BD56008EA22D /* Effects.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +56,7 @@
 		B3C3D54022DDEF8900FA72C7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B3C3D54C22DDEFC100FA72C7 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		B3C3D55022DE111300FA72C7 /* CustomAudioUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAudioUnit.swift; sourceTree = "<group>"; };
+		B3C8AE3522E0BD56008EA22D /* Effects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Effects.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +89,7 @@
 			children = (
 				B3C3D55022DE111300FA72C7 /* CustomAudioUnit.swift */,
 				B38E6B0522E04F260070E830 /* ModPlayerAudioUnit.swift */,
+				B3C8AE3522E0BD56008EA22D /* Effects.swift */,
 			);
 			path = AudioUnit;
 			sourceTree = "<group>";
@@ -323,6 +326,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B38E6B0622E04F260070E830 /* ModPlayerAudioUnit.swift in Sources */,
+				B3C8AE3622E0BD56008EA22D /* Effects.swift in Sources */,
 				B38E6B1022E06F270070E830 /* DataExtension.swift in Sources */,
 				B38E6B0A22E058B10070E830 /* BinUtils.swift in Sources */,
 				B3C3D55122DE111300FA72C7 /* CustomAudioUnit.swift in Sources */,

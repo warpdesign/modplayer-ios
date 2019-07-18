@@ -21,7 +21,7 @@ struct Channel {
     var sample = -1
     var samplePos = 0
     var period:Float = 0.0
-    var volume = 64
+    var volume:UInt8 = 64
     var slideTo = -1
     var slideSpeed = 0
     var delay = 0
@@ -34,7 +34,49 @@ struct Channel {
     var cmd = 0
 }
 
+struct Sample {
+    var name: String
+    var length: Int
+    var fintune: UInt8
+    var volume: UInt8
+    var repeatStart: Int
+    var repeatLength: Int
+    var data: Array<Float>
+}
+
 class ModPlayerAudioUnit: CustomAudioUnit {
+    var name = ""
+    var samples: Array<Sample> = []
+    var patterns: Array<UInt8> = []
+    var positions: Array<UInt8> = []
+    var songLength:UInt = 0
+    var Channels: Array<Channel> = [Channel](repeating: Channel(), count: 4)
+    var maxSamples:UInt = 0
+    // These are the default Mod speed/bpm
+    var bpm = 125
+    // number of ticks before playing next pattern row
+    var speed = 6
+    var speedUp = 1
+    var position = 0
+    var pattern = 0
+    var row = 0
+    
+    // samples to handle before generating a single tick (50hz)
+    var samplesPerTick = 0
+    var filledSamples = 0
+    var ticks = 0
+    var newTick = true
+    var rowRepeat = 0
+    var rowJump = -1
+    var skipPattern = false
+    var jumpPattern = -1
+
+    // this.buffer = null;
+    var started = false
+    var ready = false
+    
+    // new for audioworklet
+    var playing = false
     override init(componentDescription: AudioComponentDescription, options: AudioComponentInstantiationOptions = []) throws {
         try super.init(componentDescription: componentDescription, options: options)
         

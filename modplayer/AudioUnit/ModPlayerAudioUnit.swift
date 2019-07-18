@@ -17,7 +17,7 @@ let PaulaPeriods:Array<Float> = [
 var waveForms:Array<Array<Float>> = [[Float](repeating: 0.0, count: 64)];
 
 // module channel struct
-struct Channel {
+class Channel {
     var sample = -1
     var samplePos = 0
     var period:Float = 0.0
@@ -31,17 +31,47 @@ struct Channel {
     var vpos = 0
     var loopInitiated = false
     var id = 0
-    var cmd = 0
+    var cmd:UInt8 = 0
+    var data:UInt8 = 0
+    var done = false
+    
+    init(sample: Int = -1, samplePos: Int = 0, period:Float = 0.0, volume: UInt8 = 64, slideTo: Int = -1, slideSpeed: Int = 0, delay: Int = 0, vform: Float = 0.0, vdepth: Int = 0, vspeed: Int = 0, vpos:Int = 0, loopInitiated: Bool = false, id: Int = 0, cmd: UInt8 = 0, data: UInt8 = 0, done: Bool = false) {
+        self.sample = sample
+        self.samplePos = samplePos
+        self.period = period
+        self.volume = volume
+        self.slideSpeed = slideSpeed
+        self.delay = delay
+        self.vform = vform
+        self.vdepth = vdepth
+        self.vspeed = vspeed
+        self.vpos = vpos
+        self.loopInitiated = loopInitiated
+        self.id = id
+        self.cmd = cmd
+        self.data = data
+        self.done = done
+    }
 }
 
-struct Sample {
-    var name: String
-    var length: UInt16
-    var finetune: UInt8
-    var volume: UInt8
-    var repeatStart: UInt16
-    var repeatLength: UInt16
-    var data: Array<Float>?
+class Sample {
+    var name: String = ""
+    var length: UInt16 = 0
+    var finetune: UInt8 = 0
+    var volume: UInt8 = 0
+    var repeatStart: UInt16 = 0
+    var repeatLength: UInt16 = 0
+    var data: Array<Float>? = nil
+    
+    init(name: String, length: UInt16, finetune: UInt8, volume: UInt8, repeatStart: UInt16, repeatLength: UInt16, data: Array<Float>?) {
+        self.name = name
+        self.length = length
+        self.finetune = finetune
+        self.volume = volume
+        self.repeatStart = repeatStart
+        self.repeatLength = repeatLength
+        self.data = data
+    }
 }
 
 class ModPlayerAudioUnit: CustomAudioUnit {
@@ -58,7 +88,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     var speed = 6
     var speedUp = 1
     var position:UInt8 = 0
-    var pattern = 0
+    var pattern:UInt8 = 0
     var row = 0
     var patternOffset = 0
     
@@ -146,7 +176,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         self.skipPattern = false
         self.jumpPattern = -1
         self.createChannels()
-        // self.decodeRow()
+        self.decodeRow()
     }
     
     func prepareModule(buffer: Data) {
@@ -217,13 +247,12 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         let headerLength = 30
 
         for _ in 0..<self.maxSamples {
-            var sample = Sample(
+            let sample = Sample(
                 name: BinUtils.readAscii(&self.buffer!, 22, offset),
                 length: BinUtils.readWord(&self.buffer!, offset + 22) * 2,
                 finetune: uint8buffer[offset + 24] & 0xF0,
                 volume: uint8buffer[offset + 25],
                 repeatStart: BinUtils.readWord(&self.buffer!, offset + 26) * 2,
-                
                 repeatLength: BinUtils.readWord(&self.buffer!, offset + 28) * 2,
                 data: nil
             )
@@ -281,7 +310,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
 
     func createChannels() {
         for i in 0..<self.channels.count {
-            var channel = Channel(
+            let channel = Channel(
                 sample: -1,
                 samplePos: 0,
                 period: 0,
@@ -295,7 +324,9 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                 vpos: 0,
                 loopInitiated: false,
                 id: i,
-                cmd: 0
+                cmd: 0,
+                data: 0,
+                done: false
             )
     
             self.channels[i] = channel
@@ -304,6 +335,84 @@ class ModPlayerAudioUnit: CustomAudioUnit {
 //            } else {
 //            Object.assign(this.channels[i], channel);
 //            }
+        }
+    }
+
+    func getNextPattern(_ updatePos: Bool = false) {
+        if updatePos {
+            self.position += 1
+        }
+        
+        // Loop ? Use loop parameter
+        if self.position > self.positions.count - 1 {
+            print("Warning: last position reached, going back to 0")
+            self.position = 0
+        }
+        
+        for i in 0..<self.channels.count {
+            self.channels[i].loopInitiated = false
+        }
+        
+        self.pattern = self.positions[Int(self.position)]
+        
+        print("** position \(self.position) pattern: \(self.pattern)");
+    }
+    
+    func decodeRow() {
+        if (!self.started) {
+            self.started = true;
+            self.getNextPattern();
+        }
+        
+        let pattern = self.patterns[Int(self.pattern)]
+        
+        let data = Array(pattern[self.row * 16..<16 + self.row * 16])
+        
+        for i in 0..<self.channels.count {
+            let offset = i * 4
+            let period = (data[offset] & 0x0F) << 8 | data[1 + offset]
+            let sample = Int(Int(data[offset] & 0xF0 | data[2 + offset] >> 4) - 1)
+            let cmd = data[2 + offset] & 0xF
+            let cmdData = data[3 + offset]
+            let channel = self.channels[i]
+            
+            channel.delay = 0
+            
+            // check for command
+            if cmd != 0 {
+                // extended command
+                if cmd == 0xE {
+                    // note.extcmd = note.data >> 4;
+                    channel.cmd = 0xE0 + (cmdData >> 4)
+                    channel.data = cmdData & 0x0F
+                } else {
+                    channel.cmd = cmd
+                    channel.data = cmdData
+                }
+            } else {
+                channel.cmd = 0
+            }
+            
+            // check for new sample
+            if sample > -1 {
+                if channel.cmd != 0x3 && channel.cmd != 0x5 {
+                    channel.samplePos = 0
+                }
+                channel.done = false
+                channel.sample = Int(sample)
+                channel.volume = self.samples[Int(sample)].volume
+            }
+            
+            if period != 0 {
+                channel.done = false
+                // portamento will slide to the period, keep the previous one
+                if channel.cmd != 0x3 && channel.cmd != 0x5 {
+                    channel.period = Float(period)
+                    channel.samplePos = 0
+                } else {
+                    channel.slideTo = Int(period)
+                }
+            }
         }
     }
     

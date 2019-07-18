@@ -31,7 +31,10 @@ class MainViewController: UIViewController {
     }
     
     func loadData() {
+        // panic
         let myUrl = URL(string: "https://api.modarchive.org/downloads.php?moduleid=182057")
+        // cannon fodder
+        // let myUrl = URL(string: "https://api.modarchive.org/downloads.php?moduleid=34568")
         do {
             let data = try Data(contentsOf: myUrl!)
             let outputFormat = audioEngine.outputNode.inputFormat(forBus: 0)  // AVAudioFormat

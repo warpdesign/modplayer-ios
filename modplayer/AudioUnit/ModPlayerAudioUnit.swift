@@ -297,9 +297,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
             let length = self.samples[i].length
             var data = [Float](repeating: 0.0, count: Int(length))
             let maxLength = (offset + Int(length)) > self.buffer!.count ? self.buffer!.count - offset : Int(length)
-            // var toto = Array(self.buffer!.map{Int8(bitPattern: $0)})
             var pcm = Array(Array(self.buffer!.map{Int8(bitPattern: $0)})[offset..<offset+maxLength])
-            // var pcm =  new Int8Array(this.buffer, offset, maxLength);
             
             // convert 8bit pcm format to webaudio format
             for j in 0..<length {
@@ -309,6 +307,8 @@ class ModPlayerAudioUnit: CustomAudioUnit {
             self.samples[i].data = data
             
             offset += maxLength
+            
+            print("sample \(i) length=\(self.samples[i].length)")
         }
     }
 
@@ -381,7 +381,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         
         for i in 0..<self.channels.count {
             let offset = i * 4
-            let period = (data[offset] & 0x0F) << 8 | data[1 + offset]
+            let period = Int(data[offset] & 0x0F) << 8 | Int(data[1 + offset])
             let sample = Int(Int(data[offset] & 0xF0 | data[2 + offset] >> 4) - 1)
             let cmd = data[2 + offset] & 0xF
             let cmdData = data[3 + offset]

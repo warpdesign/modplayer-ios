@@ -14,7 +14,7 @@ var testFrequency = 880.0
 var testVolume = 0.5
 var toneCount = 0
 
-class MyAudioUnit: AUAudioUnit {
+class CustomAudioUnit: AUAudioUnit {
     // @interface
     var outputBusArray: AUAudioUnitBusArray?
 
@@ -27,7 +27,7 @@ class MyAudioUnit: AUAudioUnit {
 
     override init(componentDescription: AudioComponentDescription, options: AudioComponentInstantiationOptions = []) throws {
         try super.init(componentDescription: componentDescription, options: options)
-        
+       
         let defaultFormat = AVAudioFormat(standardFormatWithSampleRate: sampleRateHz, channels: 2)
         outputBus = try AUAudioUnitBus(format: defaultFormat!)
         outputBusArray = AUAudioUnitBusArray(audioUnit: self, busType: AUAudioUnitBusType.output, busses: [outputBus!])
@@ -65,7 +65,8 @@ class MyAudioUnit: AUAudioUnit {
                 // var ptrLeft  = outputBufferListPtr.pointee.mBuffers[0].mData;
                 let ptr = outputBufferListPtr.pointee.mBuffers.mData?.assumingMemoryBound(to: Float.self)
 
-                if true {
+                // this is where the audio buffers need to be filled: simply override this method
+                if false {
                     let n = frameCount
                     let f0 = testFrequency
                     let v0 = testVolume
@@ -75,10 +76,10 @@ class MyAudioUnit: AUAudioUnit {
                     for _ in 0..<n {
                         var x = 0.0
                         if toneCount != 0 {
-                            x = v0 * sin(MyAudioUnit.ph)
-                            MyAudioUnit.ph = MyAudioUnit.ph + dp
-                            if MyAudioUnit.ph > Double.pi {
-                                MyAudioUnit.ph -= 2.0 * Double.pi
+                            x = v0 * sin(CustomAudioUnit.ph)
+                            CustomAudioUnit.ph = CustomAudioUnit.ph + dp
+                            if CustomAudioUnit.ph > Double.pi {
+                                CustomAudioUnit.ph -= 2.0 * Double.pi
                             }
                             toneCount -= 1
                         }

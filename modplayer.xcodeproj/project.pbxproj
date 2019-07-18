@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B34AD0B722DF1562008CA645 /* MyV3AudioUnit5.m in Sources */ = {isa = PBXBuildFile; fileRef = B34AD0B522DF1562008CA645 /* MyV3AudioUnit5.m */; };
+		B38E6B0622E04F260070E830 /* ModPlayerAudioUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B38E6B0522E04F260070E830 /* ModPlayerAudioUnit.swift */; };
 		B3C3D51F22DDEF8700FA72C7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D51E22DDEF8700FA72C7 /* AppDelegate.swift */; };
 		B3C3D52122DDEF8700FA72C7 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D52022DDEF8700FA72C7 /* ViewController.swift */; };
 		B3C3D52422DDEF8700FA72C7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B3C3D52222DDEF8700FA72C7 /* Main.storyboard */; };
@@ -16,7 +16,7 @@
 		B3C3D53422DDEF8900FA72C7 /* modplayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D53322DDEF8900FA72C7 /* modplayerTests.swift */; };
 		B3C3D53F22DDEF8900FA72C7 /* modplayerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D53E22DDEF8900FA72C7 /* modplayerUITests.swift */; };
 		B3C3D54D22DDEFC100FA72C7 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D54C22DDEFC100FA72C7 /* MainViewController.swift */; };
-		B3C3D55122DE111300FA72C7 /* MyAudioUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D55022DE111300FA72C7 /* MyAudioUnit.swift */; };
+		B3C3D55122DE111300FA72C7 /* CustomAudioUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D55022DE111300FA72C7 /* CustomAudioUnit.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,9 +37,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		B34AD0B422DF1561008CA645 /* modplayer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modplayer-Bridging-Header.h"; sourceTree = "<group>"; };
-		B34AD0B522DF1562008CA645 /* MyV3AudioUnit5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MyV3AudioUnit5.m; sourceTree = "<group>"; };
-		B34AD0B622DF1562008CA645 /* MyV3AudioUnit5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyV3AudioUnit5.h; sourceTree = "<group>"; };
+		B38E6B0522E04F260070E830 /* ModPlayerAudioUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModPlayerAudioUnit.swift; sourceTree = "<group>"; };
 		B3C3D51B22DDEF8700FA72C7 /* modplayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = modplayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3C3D51E22DDEF8700FA72C7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B3C3D52022DDEF8700FA72C7 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -54,7 +52,7 @@
 		B3C3D53E22DDEF8900FA72C7 /* modplayerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = modplayerUITests.swift; sourceTree = "<group>"; };
 		B3C3D54022DDEF8900FA72C7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B3C3D54C22DDEFC100FA72C7 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
-		B3C3D55022DE111300FA72C7 /* MyAudioUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyAudioUnit.swift; sourceTree = "<group>"; };
+		B3C3D55022DE111300FA72C7 /* CustomAudioUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAudioUnit.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +80,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B38E6B0722E04FD00070E830 /* AudioUnit */ = {
+			isa = PBXGroup;
+			children = (
+				B3C3D55022DE111300FA72C7 /* CustomAudioUnit.swift */,
+				B38E6B0522E04F260070E830 /* ModPlayerAudioUnit.swift */,
+			);
+			path = AudioUnit;
+			sourceTree = "<group>";
+		};
 		B3C3D51222DDEF8700FA72C7 = {
 			isa = PBXGroup;
 			children = (
@@ -105,6 +112,7 @@
 		B3C3D51D22DDEF8700FA72C7 /* modplayer */ = {
 			isa = PBXGroup;
 			children = (
+				B38E6B0722E04FD00070E830 /* AudioUnit */,
 				B3C3D51E22DDEF8700FA72C7 /* AppDelegate.swift */,
 				B3C3D52022DDEF8700FA72C7 /* ViewController.swift */,
 				B3C3D52222DDEF8700FA72C7 /* Main.storyboard */,
@@ -112,10 +120,6 @@
 				B3C3D52522DDEF8900FA72C7 /* Assets.xcassets */,
 				B3C3D52722DDEF8900FA72C7 /* LaunchScreen.storyboard */,
 				B3C3D52A22DDEF8900FA72C7 /* Info.plist */,
-				B34AD0B622DF1562008CA645 /* MyV3AudioUnit5.h */,
-				B34AD0B522DF1562008CA645 /* MyV3AudioUnit5.m */,
-				B3C3D55022DE111300FA72C7 /* MyAudioUnit.swift */,
-				B34AD0B422DF1561008CA645 /* modplayer-Bridging-Header.h */,
 			);
 			path = modplayer;
 			sourceTree = "<group>";
@@ -275,8 +279,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B34AD0B722DF1562008CA645 /* MyV3AudioUnit5.m in Sources */,
-				B3C3D55122DE111300FA72C7 /* MyAudioUnit.swift in Sources */,
+				B38E6B0622E04F260070E830 /* ModPlayerAudioUnit.swift in Sources */,
+				B3C3D55122DE111300FA72C7 /* CustomAudioUnit.swift in Sources */,
 				B3C3D54D22DDEFC100FA72C7 /* MainViewController.swift in Sources */,
 				B3C3D52122DDEF8700FA72C7 /* ViewController.swift in Sources */,
 				B3C3D51F22DDEF8700FA72C7 /* AppDelegate.swift in Sources */,
@@ -463,7 +467,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.warpdesign.modplayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "modplayer/modplayer-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -483,7 +486,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.warpdesign.modplayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "modplayer/modplayer-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

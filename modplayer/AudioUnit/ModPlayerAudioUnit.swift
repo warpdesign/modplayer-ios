@@ -37,7 +37,7 @@ struct Channel {
 struct Sample {
     var name: String
     var length: UInt16
-    var fintune: UInt8
+    var finetune: UInt8
     var volume: UInt8
     var repeatStart: UInt16
     var repeatLength: UInt16
@@ -47,9 +47,9 @@ struct Sample {
 class ModPlayerAudioUnit: CustomAudioUnit {
     var name = ""
     var samples: Array<Sample> = []
-    var patterns: Array<UInt8> = []
+    var patterns: Array<Array<UInt8>> = []
     var positions: Array<UInt8> = []
-    var songLength:UInt = 0
+    var songLength:UInt8 = 0
     var channels: Array<Channel> = [Channel](repeating: Channel(), count: 4)
     var maxSamples:UInt = 0
     // These are the default Mod speed/bpm
@@ -57,7 +57,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     // number of ticks before playing next pattern row
     var speed = 6
     var speedUp = 1
-    var position = 0
+    var position:UInt8 = 0
     var pattern = 0
     var row = 0
     var patternOffset = 0
@@ -78,6 +78,11 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     
     // new for audioworklet
     var playing = false
+    
+    let patternLength = 1024
+    
+    var mixingRate = Float(48000.0)
+    
     override init(componentDescription: AudioComponentDescription, options: AudioComponentInstantiationOptions = []) throws {
         try super.init(componentDescription: componentDescription, options: options)
         
@@ -140,7 +145,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         self.rowJump = -1
         self.skipPattern = false
         self.jumpPattern = -1
-        // self.createChannels()
+        self.createChannels()
         // self.decodeRow()
     }
     
@@ -151,12 +156,12 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         self.buffer = buffer;
         self.name = BinUtils.readAscii(&self.buffer!, 20)
         
-        // self.getInstruments()
-        // self.getPatternData()
-        // self.getSampleData()
-        // self.calcTickSpeed()
-        // self.createChannels()
-        // self.resetValues()
+        self.getInstruments()
+        self.getPatternData()
+        self.getSampleData()
+        self.calcTickSpeed()
+        self.createChannels()
+        self.resetSongValues()
         self.ready = true
     }
 
@@ -176,6 +181,33 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         }
     }
     
+    func getPatternData() {
+        // pattern data always starts at offset 950
+        let offset = self.maxSamples == 15 ? 470 : 950;
+        
+        // const uint8buffer = new Uint8Array(this.buffer, offset);
+        let uint8buffer = Array(Array(self.buffer!)[offset..<self.buffer!.count])
+        self.songLength = uint8buffer[0]
+        var position = 2
+        var max:UInt8 = 0
+        
+        for i in 0..<self.songLength {
+            let pos = uint8buffer[position + Int(i)]
+            self.positions.append(pos);
+            if pos > max {
+                max = pos
+            }
+        }
+        
+        position = self.patternOffset
+        
+        for  _ in 0...max {
+            // self.patterns.append(this.buffer.slice(position, position + this.patternLength));
+            self.patterns.append(Array(Array(self.buffer!)[position..<position + self.patternLength]))
+            position += self.patternLength;
+        }
+    }
+    
     func getInstruments() {
         self.detectMaxSamples()
         self.samples = []
@@ -185,38 +217,93 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         let headerLength = 30
 
         for _ in 0..<self.maxSamples {
-            let sample = Sample(
+            var sample = Sample(
                 name: BinUtils.readAscii(&self.buffer!, 22, offset),
                 length: BinUtils.readWord(&self.buffer!, offset + 22) * 2,
-                fintune: uint8buffer[offset + 24] & 0xF0,
+                finetune: uint8buffer[offset + 24] & 0xF0,
                 volume: uint8buffer[offset + 25],
                 repeatStart: BinUtils.readWord(&self.buffer!, offset + 26) * 2,
                 
                 repeatLength: BinUtils.readWord(&self.buffer!, offset + 28) * 2,
                 data: nil
             )
-//
-//            if (sample.finetune) {
-//                debugger;
+
+            if sample.finetune > 0 {
+                print("finetune")
+            }
+
+            // Existing mod players seem to play a sample only once if repeatLength is set to 2
+            if sample.repeatLength == 2 {
+                sample.repeatLength = 0
+                // some modules seems to skip the first two bytes for length
+                if sample.length == 2 {
+                    sample.length = 0
+                }
+            }
+
+            if sample.repeatLength > sample.length {
+                sample.repeatLength = 0
+                sample.repeatStart = 0
+            }
+
+            self.samples.append(sample);
+
+            offset += headerLength;
+        }
+    }
+    
+    func getSampleData() {
+        // samples start right after patterns
+        var offset = self.patternOffset + self.patterns.count * self.patternLength
+        
+        for i in 0..<self.samples.count {
+            let length = self.samples[i].length
+            var data = [Float](repeating: 0.0, count: Int(length))
+            let maxLength = (offset + Int(length)) > self.buffer!.count ? self.buffer!.count - offset : Int(length)
+            // var toto = Array(self.buffer!.map{Int8(bitPattern: $0)})
+            var pcm = Array(Array(self.buffer!.map{Int8(bitPattern: $0)})[offset..<offset+maxLength])
+            // var pcm =  new Int8Array(this.buffer, offset, maxLength);
+            
+            // convert 8bit pcm format to webaudio format
+            for j in 0..<length {
+                data[Int(j)] = Float(pcm[Int(j)]) / 128.0;
+            }
+            
+            self.samples[i].data = data
+            
+            offset += maxLength
+        }
+    }
+
+    func calcTickSpeed() {
+        self.samplesPerTick = ((Int(self.mixingRate) * 60) / (self.bpm * self.speedUp)) / 24;
+    }
+
+    func createChannels() {
+        for i in 0..<self.channels.count {
+            var channel = Channel(
+                sample: -1,
+                samplePos: 0,
+                period: 0,
+                volume: 64,
+                slideTo: -1,
+                slideSpeed: 0,
+                delay: 0,
+                vform: 0,
+                vdepth: 0,
+                vspeed: 0,
+                vpos: 0,
+                loopInitiated: false,
+                id: i,
+                cmd: 0
+            )
+    
+            self.channels[i] = channel
+//            if (!this.channels[i]) {
+//            this.channels[i] = channel;
+//            } else {
+//            Object.assign(this.channels[i], channel);
 //            }
-//
-//            // Existing mod players seem to play a sample only once if repeatLength is set to 2
-//            if (sample.repeatLength === 2) {
-//                sample.repeatLength = 0;
-//                // some modules seems to skip the first two bytes for length
-//                if (sample.length === 2) {
-//                    sample.length = 0;
-//                }
-//            }
-//
-//            if (sample.repeatLength > sample.length) {
-//                sample.repeatLength = 0;
-//                sample.repeatStart = 0;
-//            }
-//
-//            this.samples.push(sample);
-//
-//            offset += headerLength;
         }
     }
     

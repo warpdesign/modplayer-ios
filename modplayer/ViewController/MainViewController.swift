@@ -30,6 +30,9 @@ class MainViewController: UIViewController {
         var myUrl = URL(string: "https://api.modarchive.org/downloads.php?moduleid=182057")
         do {
             let data = try Data(contentsOf: myUrl!)
+            let outputFormat = audioEngine.outputNode.inputFormat(forBus: 0)  // AVAudioFormat
+            sampleRateHz = Double(outputFormat.sampleRate)
+            (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).mixingRate = Float(sampleRateHz)
             (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).prepareModule(buffer: data)
             print("yo!")
         } catch {

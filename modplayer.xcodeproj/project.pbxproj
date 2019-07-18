@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		B38E6B0622E04F260070E830 /* ModPlayerAudioUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B38E6B0522E04F260070E830 /* ModPlayerAudioUnit.swift */; };
+		B38E6B0A22E058B10070E830 /* BinUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = B38E6B0922E058B10070E830 /* BinUtils.swift */; };
 		B3C3D51F22DDEF8700FA72C7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D51E22DDEF8700FA72C7 /* AppDelegate.swift */; };
-		B3C3D52122DDEF8700FA72C7 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C3D52022DDEF8700FA72C7 /* ViewController.swift */; };
 		B3C3D52422DDEF8700FA72C7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B3C3D52222DDEF8700FA72C7 /* Main.storyboard */; };
 		B3C3D52622DDEF8900FA72C7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3C3D52522DDEF8900FA72C7 /* Assets.xcassets */; };
 		B3C3D52922DDEF8900FA72C7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B3C3D52722DDEF8900FA72C7 /* LaunchScreen.storyboard */; };
@@ -38,9 +38,9 @@
 
 /* Begin PBXFileReference section */
 		B38E6B0522E04F260070E830 /* ModPlayerAudioUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModPlayerAudioUnit.swift; sourceTree = "<group>"; };
+		B38E6B0922E058B10070E830 /* BinUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinUtils.swift; sourceTree = "<group>"; };
 		B3C3D51B22DDEF8700FA72C7 /* modplayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = modplayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3C3D51E22DDEF8700FA72C7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		B3C3D52022DDEF8700FA72C7 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		B3C3D52322DDEF8700FA72C7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B3C3D52522DDEF8900FA72C7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B3C3D52822DDEF8900FA72C7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -89,6 +89,39 @@
 			path = AudioUnit;
 			sourceTree = "<group>";
 		};
+		B38E6B0822E058A10070E830 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				B38E6B0922E058B10070E830 /* BinUtils.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		B38E6B0B22E058F50070E830 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B3C3D51E22DDEF8700FA72C7 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		B38E6B0C22E059030070E830 /* StoryBoard */ = {
+			isa = PBXGroup;
+			children = (
+				B3C3D52722DDEF8900FA72C7 /* LaunchScreen.storyboard */,
+				B3C3D52222DDEF8700FA72C7 /* Main.storyboard */,
+			);
+			path = StoryBoard;
+			sourceTree = "<group>";
+		};
+		B38E6B0D22E059250070E830 /* ViewController */ = {
+			isa = PBXGroup;
+			children = (
+				B3C3D54C22DDEFC100FA72C7 /* MainViewController.swift */,
+			);
+			path = ViewController;
+			sourceTree = "<group>";
+		};
 		B3C3D51222DDEF8700FA72C7 = {
 			isa = PBXGroup;
 			children = (
@@ -112,13 +145,12 @@
 		B3C3D51D22DDEF8700FA72C7 /* modplayer */ = {
 			isa = PBXGroup;
 			children = (
+				B38E6B0D22E059250070E830 /* ViewController */,
+				B38E6B0C22E059030070E830 /* StoryBoard */,
+				B38E6B0B22E058F50070E830 /* App */,
 				B38E6B0722E04FD00070E830 /* AudioUnit */,
-				B3C3D51E22DDEF8700FA72C7 /* AppDelegate.swift */,
-				B3C3D52022DDEF8700FA72C7 /* ViewController.swift */,
-				B3C3D52222DDEF8700FA72C7 /* Main.storyboard */,
-				B3C3D54C22DDEFC100FA72C7 /* MainViewController.swift */,
+				B38E6B0822E058A10070E830 /* Utils */,
 				B3C3D52522DDEF8900FA72C7 /* Assets.xcassets */,
-				B3C3D52722DDEF8900FA72C7 /* LaunchScreen.storyboard */,
 				B3C3D52A22DDEF8900FA72C7 /* Info.plist */,
 			);
 			path = modplayer;
@@ -280,9 +312,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				B38E6B0622E04F260070E830 /* ModPlayerAudioUnit.swift in Sources */,
+				B38E6B0A22E058B10070E830 /* BinUtils.swift in Sources */,
 				B3C3D55122DE111300FA72C7 /* CustomAudioUnit.swift in Sources */,
 				B3C3D54D22DDEFC100FA72C7 /* MainViewController.swift in Sources */,
-				B3C3D52122DDEF8700FA72C7 /* ViewController.swift in Sources */,
 				B3C3D51F22DDEF8700FA72C7 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

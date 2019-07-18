@@ -90,6 +90,22 @@ class ModPlayerAudioUnit: CustomAudioUnit {
             waveForms[0][i] = 64.0 * sin(Float.pi * 2.0 * (Float(i) / 64.0));
         }
     }
+
+    func resetValues() {
+        self.started = false
+        self.position = 0
+        self.row = 0
+        self.ticks = 0
+        self.filledSamples = 0
+        self.speed = 6
+        self.newTick = true
+        self.rowRepeat = 0
+        self.rowJump = -1
+        self.skipPattern = false
+        self.jumpPattern = -1
+        // self.createChannels()
+        // self.decodeRow()
+    }
     
     // audio mix callback: this is where all the magic happens
     let mix: AURenderBlock = {

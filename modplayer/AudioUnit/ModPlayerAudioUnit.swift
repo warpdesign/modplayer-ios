@@ -19,7 +19,7 @@ var waveForms:Array<Array<Float>> = [[Float](repeating: 0.0, count: 64)];
 // module channel struct
 class Channel {
     var sample = -1
-    var samplePos = 0
+    var samplePos:Float = 0.0
     var period:Float = 0.0
     var volume:UInt8 = 64
     var slideTo = -1
@@ -34,8 +34,9 @@ class Channel {
     var cmd:UInt8 = 0
     var data:UInt8 = 0
     var done = false
+    var off = false
     
-    init(sample: Int = -1, samplePos: Int = 0, period:Float = 0.0, volume: UInt8 = 64, slideTo: Int = -1, slideSpeed: Int = 0, delay: Int = 0, vform: Float = 0.0, vdepth: Int = 0, vspeed: Int = 0, vpos:Int = 0, loopInitiated: Bool = false, id: Int = 0, cmd: UInt8 = 0, data: UInt8 = 0, done: Bool = false) {
+    init(sample: Int = -1, samplePos: Float = 0.0, period:Float = 0.0, volume: UInt8 = 64, slideTo: Int = -1, slideSpeed: Int = 0, delay: Int = 0, vform: Float = 0.0, vdepth: Int = 0, vspeed: Int = 0, vpos:Int = 0, loopInitiated: Bool = false, id: Int = 0, cmd: UInt8 = 0, data: UInt8 = 0, done: Bool = false, off: Bool = false) {
         self.sample = sample
         self.samplePos = samplePos
         self.period = period
@@ -51,6 +52,7 @@ class Channel {
         self.cmd = cmd
         self.data = data
         self.done = done
+        self.off = false
     }
 }
 
@@ -87,7 +89,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     // number of ticks before playing next pattern row
     var speed = 6
     var speedUp = 1
-    var position:UInt8 = 0
+    var position = 0
     var pattern:UInt8 = 0
     var row = 0
     var patternOffset = 0
@@ -416,6 +418,45 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         }
     }
     
+    func tick() {
+        if self.filledSamples > self.samplesPerTick {
+            self.newTick = true
+            self.ticks += 1
+            self.filledSamples = 0
+            if self.ticks > self.speed - 1 {
+                self.ticks = 0
+                
+                if self.rowRepeat <= 0 {
+                    self.row += 1
+                }
+                
+                if self.row > 63 || self.skipPattern {
+                    self.skipPattern = false
+                    if self.jumpPattern > -1 {
+                        self.position = self.jumpPattern
+                        self.jumpPattern = -1
+                        self.getNextPattern()
+                    } else {
+                        self.getNextPattern(true)
+                    }
+                }
+                
+                if self.rowJump > -1 {
+                    self.row = self.rowJump
+                    self.rowJump = -1
+                }
+                
+                if self.row > 63 {
+                    self.row = 0
+                }
+                
+                self.decodeRow()
+                
+                // console.log('** next row !', this.row.toString(16).padStart(2, "0"));
+            }
+        }
+    }
+    
     // audio mix callback: this is where all the magic happens
     // let mix: AURenderBlock =
     override var renderBlock: AURenderBlock {
@@ -431,7 +472,76 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                 let numBuffers = outputBufferListPtr.pointee.mNumberBuffers
                 let ptr = outputBufferListPtr.pointee.mBuffers.mData?.assumingMemoryBound(to: Float.self)
                 
-                if /*self.ready && self.playing*/ true {
+                if self.ready && self.playing {
+                    // const length = this.audioWorkletSupport && outputs[0][0].length || outputs[0][0].length;
+                    let length = frameCount
+                    
+                    for i in 0..<length {
+                        // buffers[0][i] = 0.0;
+                        // buffers[1][i] = 0.0;
+                        var outputChannel = 0;
+                        
+                        // clear both channel frames
+                        (ptr! + Int(i)).pointee = 0
+                        if (numBuffers > 1) {
+                            (ptr! + Int(i) + Int(length)).pointee = 0
+                        }
+//                        if (this.audioWorkletSupport) {
+//                            outputs[0][0][i] = 0.0;
+//                            outputs[1][0][i] = 0.0;
+//                            outputs[2][0][i] = 0.0;
+//                            outputs[3][0][i] = 0.0;
+//                        } else {
+//                            outputs[0][0][i] = 0.0;
+//                            outputs[0][1][i] = 0.0;
+//                        }
+                        
+                        // playing speed test
+                        self.tick()
+                        
+                        for chan in 0..<self.channels.count {
+                            let channel = self.channels[chan]
+                            // select left/right output depending on module channel:
+                            // voices 0,3 go to left channel, 1,2 go to right channel
+                            outputChannel = outputChannel ^ (chan & 1);
+                            
+                            // const buffer = this.audioWorkletSupport ? outputs[chan][0] : outputs[0][outputChannel];
+                            let bufferOffset = outputChannel == 0 ? 0 : frameCount
+                            
+                            // TODO: check that no effect can be applied without a note
+                            // otherwise that will have to be moved outside this loop
+                            if self.newTick && channel.cmd != 0 {
+                                // self.executeEffect(channel)
+                            }
+                            
+                            if !channel.off && channel.period != 0 && channel.sample > -1 && !channel.done && self.ticks >= channel.delay {
+                                
+                                let sample = self.samples[channel.sample]
+                                
+                                // actually mix audio
+                                (ptr! + Int(i + bufferOffset)).pointee += (sample.data![Int(floor(channel.samplePos))] * Float(channel.volume)) / 64.0;
+                                
+                                let sampleSpeed = 7093789.2 / ((channel.period * 2.0) * self.mixingRate);
+                                channel.samplePos += sampleSpeed;
+                                // repeat samples
+                                if !channel.done {
+                                    if sample.repeatLength == 0 && sample.repeatStart == 0 {
+                                        if UInt16(channel.samplePos) > sample.length {
+                                            channel.samplePos = 0
+                                            channel.done = true
+                                        }
+                                    } else if UInt16(channel.samplePos) >= (sample.repeatStart + sample.repeatLength) {
+                                        channel.samplePos = Float(sample.repeatStart)
+                                    }
+                                }
+                            }
+                        }
+                        self.filledSamples += 1
+                        self.newTick = false;
+                    }
+                }
+                
+                if /*self.ready && self.playing*/ false {
                     let n = frameCount
                     let f0 = testFrequency
                     let v0 = testVolume

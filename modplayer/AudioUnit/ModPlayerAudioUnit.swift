@@ -120,6 +120,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     let patternLength = 1024
     
     var mixingRate = Float(48000.0)
+    var hack = 0
     
     override init(componentDescription: AudioComponentDescription, options: AudioComponentInstantiationOptions = []) throws {
         try super.init(componentDescription: componentDescription, options: options)
@@ -299,7 +300,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
             let maxLength = (offset + Int(length)) > self.buffer!.count ? self.buffer!.count - offset : Int(length)
             var pcm = Array(Array(self.buffer!.map{Int8(bitPattern: $0)})[offset..<offset+maxLength])
             
-            // convert 8bit pcm format to webaudio format
+            // convert integer 8bit PCM (-127...127) to float audio (-1.0...1.0)
             for j in 0..<length {
                 data[Int(j)] = Float(pcm[Int(j)]) / 128.0;
             }
@@ -314,6 +315,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
 
     func calcTickSpeed() {
         self.samplesPerTick = ((Int(self.mixingRate) * 60) / (self.bpm * self.speedUp)) / 24;
+        print("calcTickSpeed = \(self.samplesPerTick)")
     }
 
     func createChannels() {
@@ -429,11 +431,6 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     
     func executeEffect(_ channel: Channel) {
         Effects.execute(channel, self)
-//        do {
-//            try Effects.execute(channel, self)
-//        } catch {
-//            print("error executing effect")
-//        }
     }
     
     func tick() {
@@ -442,6 +439,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
             self.ticks += 1
             self.filledSamples = 0
             if self.ticks > self.speed - 1 {
+                print("new tick: \(self.ticks)")
                 self.ticks = 0
                 
                 if self.rowRepeat <= 0 {
@@ -469,8 +467,6 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                 }
                 
                 self.decodeRow()
-                
-                // console.log('** next row !', this.row.toString(16).padStart(2, "0"));
             }
         }
     }
@@ -483,7 +479,6 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     }
     
     // audio mix callback: this is where all the magic happens
-    // let mix: AURenderBlock =
     override var renderBlock: AURenderBlock {
         get {
             return {
@@ -498,12 +493,11 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                 let ptr = outputBufferListPtr.pointee.mBuffers.mData?.assumingMemoryBound(to: Float.self)
                 
                 if self.ready && self.playing {
-                    // const length = this.audioWorkletSupport && outputs[0][0].length || outputs[0][0].length;
+                    
+                    // print("timeStamp: \(timestamp.pointee.mSampleTime) frameCount: \(frameCount)")
                     let length = frameCount
                     
                     for i in 0..<length {
-                        // buffers[0][i] = 0.0;
-                        // buffers[1][i] = 0.0;
                         var outputChannel = 0;
                         
                         // clear both channel frames
@@ -511,15 +505,6 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                         if (numBuffers > 1) {
                             (ptr! + Int(i) + Int(length)).pointee = 0
                         }
-//                        if (this.audioWorkletSupport) {
-//                            outputs[0][0][i] = 0.0;
-//                            outputs[1][0][i] = 0.0;
-//                            outputs[2][0][i] = 0.0;
-//                            outputs[3][0][i] = 0.0;
-//                        } else {
-//                            outputs[0][0][i] = 0.0;
-//                            outputs[0][1][i] = 0.0;
-//                        }
                         
                         // playing speed test
                         self.tick()
@@ -528,10 +513,11 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                             let channel = self.channels[chan]
                             // select left/right output depending on module channel:
                             // voices 0,3 go to left channel, 1,2 go to right channel
-                            outputChannel = outputChannel ^ (chan & 1);
+                            outputChannel = outputChannel ^ (chan & 1)
                             
-                            // const buffer = this.audioWorkletSupport ? outputs[chan][0] : outputs[0][outputChannel];
-                            let bufferOffset = outputChannel == 0 ? 0 : frameCount
+                            // real devices seem to only have one buffer (eg. iPhone 7):
+                            // mix everything in one buffer in that case
+                            let bufferOffset = (numBuffers == 1 || outputChannel == 0) ? 0 : frameCount
                             
                             // TODO: check that no effect can be applied without a note
                             // otherwise that will have to be moved outside this loop
@@ -544,18 +530,12 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                                 let sample = self.samples[channel.sample]
                                 
                                 // actually mix audio
-                                if Int(i + bufferOffset) >= frameCount * 2 {
-                                    print("Oops, Houston we have a problem!")
-                                }
+                                (ptr! + Int(i + bufferOffset)).pointee += (sample.data![Int(floor(channel.samplePos))] * Float(channel.volume)) / 64.0
                                 
-                                if Int(floor(channel.samplePos)) >= sample.data!.count {
-                                    print("Oops, Houston we have a problem!")
-                                }
+                                let sampleSpeed = 7093789.2 / ((channel.period * 2.0) * self.mixingRate)
                                 
-                                (ptr! + Int(i + bufferOffset)).pointee += (sample.data![Int(floor(channel.samplePos))] * Float(channel.volume)) / 64.0;
+                                channel.samplePos += sampleSpeed
                                 
-                                let sampleSpeed = 7093789.2 / ((channel.period * 2.0) * self.mixingRate);
-                                channel.samplePos += sampleSpeed;
                                 // repeat samples
                                 if !channel.done {
                                     if sample.repeatLength == 0 && sample.repeatStart == 0 {
@@ -570,37 +550,11 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                             }
                         }
                         self.filledSamples += 1
-                        self.newTick = false;
+                        self.newTick = false
                     }
                 }
                 
-                if /*self.ready && self.playing*/ false {
-                    let n = frameCount
-                    let f0 = testFrequency
-                    let v0 = testVolume
-                    let dp = 2.0 * Double.pi * f0 / sampleRateHz
-                    var offset = 0
-                    
-                    for _ in 0..<n {
-                        var x = 0.0
-                        if toneCount != 0 {
-                            x = v0 * sin(CustomAudioUnit.ph)
-                            CustomAudioUnit.ph = CustomAudioUnit.ph + dp
-                            if CustomAudioUnit.ph > Double.pi {
-                                CustomAudioUnit.ph -= 2.0 * Double.pi
-                            }
-                            // toneCount -= 1
-                        }
-                        
-                        (ptr! + offset).pointee = Float(x)
-                        
-                        // handle right channel
-                        if numBuffers == 2 {
-                            (ptr! + offset + Int(n)).pointee = Float(x)
-                        }
-                        offset = offset + 1
-                    }
-                }
+                self.hack += 1
                 
                 return noErr
             }

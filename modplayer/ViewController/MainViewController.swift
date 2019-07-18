@@ -26,13 +26,17 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //play()
         self.audioSetup()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        self.loadData()
+        audioPrepare()
     }
     
     func loadData() {
         // panic
-        let myUrl = URL(string: "https://api.modarchive.org/downloads.php?moduleid=182057")
+        let myUrl = URL(string: "https://api.modarchive.org/downloads.php?moduleid=34568")
         // cannon fodder
         // let myUrl = URL(string: "https://api.modarchive.org/downloads.php?moduleid=34568")
         do {
@@ -45,15 +49,11 @@ class MainViewController: UIViewController {
             playButton.isEnabled = true
             spinner.isHidden = true
             titleLabel.text = "♫ " + (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).name
+            print("Set mixingRate to \(sampleRateHz)")
             
         } catch {
             print("oops")
         }
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        self.loadData()
-        audioPrepare()
     }
     
     func audioSetup() {
@@ -61,17 +61,23 @@ class MainViewController: UIViewController {
         let sess = AVAudioSession.sharedInstance()
         try! sess.setCategory(AVAudioSession.Category(rawValue: convertFromAVAudioSessionCategory(AVAudioSession.Category.playAndRecord)))
         do {
+            print("Attempt to set sampleRate to 48khz")
             try sess.setPreferredSampleRate(48000.0)
+            print("sampleRate was set to \(sess.sampleRate)")
             sampleRateHz    = 48000.0
-        } catch { sampleRateHz    = 44100.0 }        // for Simulator and old devices
+        } catch {
+            // for Simulator and old devices
+            print("Falling back to 44khz")
+            sampleRateHz    = 44100.0
+        }
         do {
             let duration = 1.00 * (256.0/48000.0)
             try sess.setPreferredIOBufferDuration(duration)   // 256 samples
-        } catch { }
+        } catch {
+            print("Could not setPreferredIOBufferDuration")
+        }
+        
         try! sess.setActive(true)
-        
-        // audioEngine = AVAudioEngine()
-        
         
         let myUnitType = kAudioUnitType_Generator
         let mySubType : OSType = 1
@@ -155,46 +161,6 @@ class MainViewController: UIViewController {
         } catch let error as NSError {
             // self.myInfoLabel1.text = (error.localizedDescription)
             print("error: \(error.localizedDescription)")
-        }
-    }
-    
-    func play() {
-        DispatchQueue.global(qos: .background).async {
-            let avAudioUnit = AVAudioUnit()
-            
-            // creates global mixer and point its output to the audio output
-            self.audioEngine.attach(avAudioUnit)
-            self.audioEngine.attach(self.mixer)
-            self.audioEngine.connect(self.mixer, to: self.audioEngine.outputNode, format: nil)
-            try! self.audioEngine.start()
-            
-            // create a node player and connect it to the mixer
-//            let audioPlayer = AVAudioPlayerNode()
-//            self.audioEngine.attach(audioPlayer)
-//            // Notice the output is the mixer in this case
-//             self.audioEngine.connect(audioPlayer, to: self.mixer, format: nil)
-//
-//            // load a new file
-//            let path = Bundle.main.path(forResource: "onlylove", ofType: "mp3")
-//            let audioFileURL = URL(fileURLWithPath: path!)
-//
-//            var file: AVAudioFile = try! AVAudioFile.init(forReading: audioFileURL.absoluteURL)
-//
-//            audioPlayer.scheduleFile(file, at: nil, completionHandler: nil)
-//            audioPlayer.play(at: nil)
-            
-            // own audio
-            // avAudioUnit.auAudioUnit.isInputEnabled  = true
-            avAudioUnit.auAudioUnit.outputProvider = { // AURenderPullInputBlock()
-                
-                (actionFlags, timestamp, frameCount, inputBusNumber, inputData) -> AUAudioUnitStatus in
-                
-                print("outputProvider: \(timestamp)")
-                
-                return 0
-            }
-            
-            self.audioEngine.connect(avAudioUnit, to: self.mixer, format: nil)
         }
     }
     

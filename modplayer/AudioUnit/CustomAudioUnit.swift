@@ -41,7 +41,6 @@ class CustomAudioUnit: AUAudioUnit {
         try super.allocateRenderResources()
         my_pcmBuffer = AVAudioPCMBuffer(pcmFormat: outputBus!.format, frameCapacity: 4096)
         myAudioBufferList = my_pcmBuffer!.audioBufferList.pointee
-
     }
 
     override func deallocateRenderResources() {
@@ -51,55 +50,6 @@ class CustomAudioUnit: AUAudioUnit {
     override var outputBusses: AUAudioUnitBusArray {
         get {
             return outputBusArray!
-        }
-    }
-    
-    override var renderBlock: AURenderBlock {
-        get {
-            return {
-                (actionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, timestamp: UnsafePointer<AudioTimeStamp>, frameCount: AVAudioFrameCount,
-                outputBusNumber: NSInteger, outputBufferListPtr: UnsafeMutablePointer<AudioBufferList>,
-                pullInputBlock: AURenderPullInputBlock?) -> AUAudioUnitStatus in
-
-                let numBuffers = outputBufferListPtr.pointee.mNumberBuffers
-                // var ptrLeft  = outputBufferListPtr.pointee.mBuffers[0].mData;
-                let ptr = outputBufferListPtr.pointee.mBuffers.mData?.assumingMemoryBound(to: Float.self)
-
-                // this is where the audio buffers need to be filled: simply override this method
-                if false {
-                    let n = frameCount
-                    let f0 = testFrequency
-                    let v0 = testVolume
-                    let dp = 2.0 * Double.pi * f0 / sampleRateHz
-                    var offset = 0
-
-                    for _ in 0..<n {
-                        var x = 0.0
-                        if toneCount != 0 {
-                            x = v0 * sin(CustomAudioUnit.ph)
-                            CustomAudioUnit.ph = CustomAudioUnit.ph + dp
-                            if CustomAudioUnit.ph > Double.pi {
-                                CustomAudioUnit.ph -= 2.0 * Double.pi
-                            }
-                            toneCount -= 1
-                        }
-
-                        (ptr! + offset).pointee = Float(x)
-
-                        // handle right channel
-                        if numBuffers == 2 {
-                            (ptr! + offset + Int(n)).pointee = Float(x)
-                        }
-                        offset = offset + 1
-                    }
-                }
-    //             *ptrRight = NULL;
-    //            if (numBuffers == 2) {
-    //                ptrRight    = (float*)outputBufferListPtr->mBuffers[1].mData;
-    //            }
-
-                return noErr
-            }
         }
     }
 }

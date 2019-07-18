@@ -9,6 +9,52 @@
 import Foundation
 
 struct Effects {
+    static func execute(_ channel: Channel, _ module: ModPlayerAudioUnit) {
+        switch(channel.cmd) {
+        case 0x1:
+            Effects._0x1(module, channel)
+        case 0x2:
+            Effects._0x2(module, channel)
+        case 0x4:
+            Effects._0x4(module, channel)
+        case 0x5:
+            Effects._0x5(module, channel)
+        case 0x6:
+            Effects._0x6(module, channel)
+        case 0x9:
+            Effects._0x9(module, channel)
+        case 0xA:
+            Effects._0xA(module, channel)
+        case 0xB:
+            Effects._0xB(module, channel)
+        case 0xC:
+            Effects._0xC(module, channel)
+        case 0xD:
+            Effects._0xD(module, channel)
+        case 0xE0:
+            Effects._0xE0(module, channel)
+        case 0xE4:
+            Effects._0xE4(module, channel)
+        case 0xE6:
+            Effects._0xE6(module, channel)
+        case 0xE9:
+            Effects._0xE9(module, channel)
+        case 0xEA:
+            Effects._0xEA(module, channel)
+        case 0xEB:
+            Effects._0xEB(module, channel)
+        case 0xED:
+            Effects._0xED(module, channel)
+        case 0xEE:
+            Effects._0xEE(module, channel)
+        case 0xF:
+            Effects._0xF(module, channel)
+            
+        default:
+            print("Effect not implemented: \(channel.cmd)")
+        }
+    }
+    
     /**
      * Slide up
      */
@@ -115,7 +161,7 @@ struct Effects {
      */
     static func _0x9(_ module: ModPlayerAudioUnit, _ channel: Channel) {
         if module.ticks == 0 {
-            channel.samplePos = Float(channel.data * 256)
+            channel.samplePos = Float(channel.data) * 256.0
             // does it happen on next line ?
             // channel.done = true;
         }
@@ -132,7 +178,11 @@ struct Effects {
             if y == 0 {
                 channel.volume += x
             } else if x == 0 {
-                channel.volume -= y
+                if channel.volume >= y {
+                    channel.volume -= y
+                } else {
+                    channel.volume = 0
+                }
             }
             
             if channel.volume > 63 {
@@ -245,10 +295,15 @@ struct Effects {
      */
     static func _0xEB(_ module: ModPlayerAudioUnit, _ channel: Channel) {
         if module.ticks == 0 {
-            channel.volume -= channel.data
-            if channel.volume < 0 {
+            if channel.volume >= channel.data {
+                channel.volume -= channel.data
+            } else {
                 channel.volume = 0
             }
+//            channel.volume -= channel.data
+//            if channel.volume < 0 {
+//                channel.volume = 0
+//            }
         }
     }
     /**

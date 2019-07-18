@@ -427,6 +427,15 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         }
     }
     
+    func executeEffect(_ channel: Channel) {
+        Effects.execute(channel, self)
+//        do {
+//            try Effects.execute(channel, self)
+//        } catch {
+//            print("error executing effect")
+//        }
+    }
+    
     func tick() {
         if self.filledSamples > self.samplesPerTick {
             self.newTick = true
@@ -463,6 +472,13 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                 
                 // console.log('** next row !', this.row.toString(16).padStart(2, "0"));
             }
+        }
+    }
+    
+    func play() {
+        if (self.ready) {
+            print("Let's gooooo !!!")
+            self.playing = true
         }
     }
     
@@ -520,7 +536,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                             // TODO: check that no effect can be applied without a note
                             // otherwise that will have to be moved outside this loop
                             if self.newTick && channel.cmd != 0 {
-                                // self.executeEffect(channel)
+                                self.executeEffect(channel)
                             }
                             
                             if !channel.off && channel.period != 0 && channel.sample > -1 && !channel.done && self.ticks >= channel.delay {
@@ -528,6 +544,14 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                                 let sample = self.samples[channel.sample]
                                 
                                 // actually mix audio
+                                if Int(i + bufferOffset) >= frameCount * 2 {
+                                    print("Oops, Houston we have a problem!")
+                                }
+                                
+                                if Int(floor(channel.samplePos)) >= sample.data!.count {
+                                    print("Oops, Houston we have a problem!")
+                                }
+                                
                                 (ptr! + Int(i + bufferOffset)).pointee += (sample.data![Int(floor(channel.samplePos))] * Float(channel.volume)) / 64.0;
                                 
                                 let sampleSpeed = 7093789.2 / ((channel.period * 2.0) * self.mixingRate);
@@ -535,7 +559,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                                 // repeat samples
                                 if !channel.done {
                                     if sample.repeatLength == 0 && sample.repeatStart == 0 {
-                                        if UInt16(channel.samplePos) > sample.length {
+                                        if UInt16(channel.samplePos) >= sample.length {
                                             channel.samplePos = 0
                                             channel.done = true
                                         }

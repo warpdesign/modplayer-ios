@@ -18,12 +18,16 @@ class MainViewController: UIViewController {
     let mixer = AVAudioMixerNode()
     var playing = false
     
+    @IBOutlet weak var playButton: UIButton!
+    
+    @IBOutlet weak var spinner: UIActivityIndicatorView!
+    @IBOutlet weak var titleLabel: UILabel!
+    @IBOutlet weak var pauseButton: UIButton!
     override func viewDidLoad() {
         super.viewDidLoad()
         
         //play()
         self.audioSetup()
-        self.loadData()
     }
     
     func loadData() {
@@ -34,13 +38,18 @@ class MainViewController: UIViewController {
             sampleRateHz = Double(outputFormat.sampleRate)
             (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).mixingRate = Float(sampleRateHz)
             (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).prepareModule(buffer: data)
-            print("yo!")
+            pauseButton.isEnabled = true
+            playButton.isEnabled = true
+            spinner.isHidden = true
+            titleLabel.text = "♫ " + (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).name
+            
         } catch {
             print("oops")
         }
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        self.loadData()
         audioPrepare()
     }
     
@@ -125,6 +134,7 @@ class MainViewController: UIViewController {
             // self.myInfoLabel1.text = "engine started"
             // toneCount = 44100 / 2
             playing = true
+            (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).play()
             print("engine started")
         } catch let error as NSError {
             // self.myInfoLabel1.text = (error.localizedDescription)
@@ -196,15 +206,6 @@ class MainViewController: UIViewController {
     }
     */
 
-    @IBAction func onToneTap(_ sender: Any) {
-        print("tone!")
-        toneCount = 44100 / 2
-        
-        if !playing {
-            print("need to start audio")
-            audioStart()
-        }
-    }
     
     @IBAction func onPlayTap(_ sender: Any) {
         print("onPlay")

@@ -26,9 +26,8 @@ struct BinUtils {
 
         return str;
     }
-//    readWord(buffer, offset = 0, littleEndian = false) {
-//    const view = new DataView(buffer);
-//
-//    return view.getUint16(offset, littleEndian);
-//    }
+    
+    static func readWord(_ buffer: inout Data, _ offset:Int = 0, littleEndian:Bool = false) -> UInt16{
+        return buffer.getUInt16(offset);
+    }
 }

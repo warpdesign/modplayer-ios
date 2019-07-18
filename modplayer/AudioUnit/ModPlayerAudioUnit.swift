@@ -50,7 +50,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     var patterns: Array<UInt8> = []
     var positions: Array<UInt8> = []
     var songLength:UInt = 0
-    var Channels: Array<Channel> = [Channel](repeating: Channel(), count: 4)
+    var channels: Array<Channel> = [Channel](repeating: Channel(), count: 4)
     var maxSamples:UInt = 0
     // These are the default Mod speed/bpm
     var bpm = 125
@@ -71,7 +71,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
     var skipPattern = false
     var jumpPattern = -1
 
-    // this.buffer = null;
+    var buffer:Data? = nil
     var started = false
     var ready = false
     
@@ -91,7 +91,42 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         }
     }
 
-    func resetValues() {
+    func resetProperties() {
+        name = ""
+        samples = []
+        patterns = []
+        positions = []
+        songLength = 0
+        channels = [Channel](repeating: Channel(), count: 4)
+        maxSamples = 0
+        // These are the default Mod speed/bpm
+        bpm = 125
+        // number of ticks before playing next pattern row
+        speed = 6
+        speedUp = 1
+        position = 0
+        pattern = 0
+        row = 0
+        
+        // samples to handle before generating a single tick (50hz)
+        samplesPerTick = 0
+        filledSamples = 0
+        ticks = 0
+        newTick = true
+        rowRepeat = 0
+        rowJump = -1
+        skipPattern = false
+        jumpPattern = -1
+        
+        buffer = nil
+        started = false
+        ready = false
+        
+        // new for audioworklet
+        playing = false
+    }
+    
+    func resetSongValues() {
         self.started = false
         self.position = 0
         self.row = 0
@@ -107,52 +142,68 @@ class ModPlayerAudioUnit: CustomAudioUnit {
         // self.decodeRow()
     }
     
-    // audio mix callback: this is where all the magic happens
-    let mix: AURenderBlock = {
-        (actionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>,
-        timestamp: UnsafePointer<AudioTimeStamp>,
-        frameCount: AVAudioFrameCount,
-        outputBusNumber: NSInteger,
-        outputBufferListPtr: UnsafeMutablePointer<AudioBufferList>,
-        pullInputBlock: AURenderPullInputBlock?) -> AUAudioUnitStatus in
+    func prepareModule(buffer: Data) {
+        print("Decoding module data...")
+        self.ready = false
+        self.resetProperties()
+        self.buffer = buffer;
+        self.name = BinUtils.readAscii(&self.buffer!, 20)
         
-            let numBuffers = outputBufferListPtr.pointee.mNumberBuffers
-            let ptr = outputBufferListPtr.pointee.mBuffers.mData?.assumingMemoryBound(to: Float.self)
-        
-            if true {
-                let n = frameCount
-                let f0 = testFrequency
-                let v0 = testVolume
-                let dp = 2.0 * Double.pi * f0 / sampleRateHz
-                var offset = 0
-                
-                for _ in 0..<n {
-                    var x = 0.0
-                    if toneCount != 0 {
-                        x = v0 * sin(CustomAudioUnit.ph)
-                        CustomAudioUnit.ph = CustomAudioUnit.ph + dp
-                        if CustomAudioUnit.ph > Double.pi {
-                            CustomAudioUnit.ph -= 2.0 * Double.pi
-                        }
-                        // toneCount -= 1
-                    }
-                    
-                    (ptr! + offset).pointee = Float(x)
-                    
-                    // handle right channel
-                    if numBuffers == 2 {
-                        (ptr! + offset + Int(n)).pointee = Float(x)
-                    }
-                    offset = offset + 1
-                }
-            }
-        
-            return noErr
+        // self.getInstruments()
+        // self.getPatternData()
+        // self.getSampleData()
+        // self.calcTickSpeed()
+        // self.createChannels()
+        // self.resetValues()
+        self.ready = true
     }
+    
+    // audio mix callback: this is where all the magic happens
+    // let mix: AURenderBlock =
         
     override var renderBlock: AURenderBlock {
         get {
-            return self.mix
+            return {
+                (actionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>,
+                timestamp: UnsafePointer<AudioTimeStamp>,
+                frameCount: AVAudioFrameCount,
+                outputBusNumber: NSInteger,
+                outputBufferListPtr: UnsafeMutablePointer<AudioBufferList>,
+                pullInputBlock: AURenderPullInputBlock?) -> AUAudioUnitStatus in
+                
+                let numBuffers = outputBufferListPtr.pointee.mNumberBuffers
+                let ptr = outputBufferListPtr.pointee.mBuffers.mData?.assumingMemoryBound(to: Float.self)
+                
+                if /*self.ready && self.playing*/ true {
+                    let n = frameCount
+                    let f0 = testFrequency
+                    let v0 = testVolume
+                    let dp = 2.0 * Double.pi * f0 / sampleRateHz
+                    var offset = 0
+                    
+                    for _ in 0..<n {
+                        var x = 0.0
+                        if toneCount != 0 {
+                            x = v0 * sin(CustomAudioUnit.ph)
+                            CustomAudioUnit.ph = CustomAudioUnit.ph + dp
+                            if CustomAudioUnit.ph > Double.pi {
+                                CustomAudioUnit.ph -= 2.0 * Double.pi
+                            }
+                            // toneCount -= 1
+                        }
+                        
+                        (ptr! + offset).pointee = Float(x)
+                        
+                        // handle right channel
+                        if numBuffers == 2 {
+                            (ptr! + offset + Int(n)).pointee = Float(x)
+                        }
+                        offset = offset + 1
+                    }
+                }
+                
+                return noErr
+            }
         }
     }
 }

@@ -22,14 +22,15 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         
         //play()
-        self.loadData()
         self.audioSetup()
+        self.loadData()
     }
     
     func loadData() {
         var myUrl = URL(string: "https://api.modarchive.org/downloads.php?moduleid=182057")
         do {
             let data = try Data(contentsOf: myUrl!)
+            (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).prepareModule(buffer: data)
             print("yo!")
         } catch {
             print("oops")

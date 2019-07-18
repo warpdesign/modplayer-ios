@@ -134,7 +134,7 @@ class ModPlayerAudioUnit: CustomAudioUnit {
                         if CustomAudioUnit.ph > Double.pi {
                             CustomAudioUnit.ph -= 2.0 * Double.pi
                         }
-                        toneCount -= 1
+                        // toneCount -= 1
                     }
                     
                     (ptr! + offset).pointee = Float(x)

@@ -15,7 +15,7 @@ class MainViewController: UIViewController {
     let audioEngine = AVAudioEngine()
     var myAUNode: AVAudioUnit?        =  nil
     // Do any additional setup after loading the view.
-    let mixer = AVAudioMixerNode()
+    // let mixer = AVAudioMixerNode()
     var playing = false
     
     @IBOutlet weak var playButton: UIButton!
@@ -23,6 +23,7 @@ class MainViewController: UIViewController {
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var pauseButton: UIButton!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -30,8 +31,12 @@ class MainViewController: UIViewController {
     }
 
     override func viewDidAppear(_ animated: Bool) {
+        print("viewDidAppear")
+        print("loadData")
         self.loadData()
+        print("audioPrepare")
         audioPrepare()
+        print("all done")
     }
     
     func loadData() {
@@ -58,26 +63,6 @@ class MainViewController: UIViewController {
     
     func audioSetup() {
         print("audioSetup()")
-        let sess = AVAudioSession.sharedInstance()
-        try! sess.setCategory(AVAudioSession.Category(rawValue: convertFromAVAudioSessionCategory(AVAudioSession.Category.playAndRecord)))
-        do {
-            print("Attempt to set sampleRate to 48khz")
-            try sess.setPreferredSampleRate(48000.0)
-            print("sampleRate was set to \(sess.sampleRate)")
-            sampleRateHz    = 48000.0
-        } catch {
-            // for Simulator and old devices
-            print("Falling back to 44khz")
-            sampleRateHz    = 44100.0
-        }
-        do {
-            let duration = 1.00 * (256.0/48000.0)
-            try sess.setPreferredIOBufferDuration(duration)   // 256 samples
-        } catch {
-            print("Could not setPreferredIOBufferDuration")
-        }
-        
-        try! sess.setActive(true)
         
         let myUnitType = kAudioUnitType_Generator
         let mySubType : OSType = 1
@@ -89,7 +74,6 @@ class MainViewController: UIViewController {
             componentFlagsMask:    0 )
         
         print("registerSubclass")
-        // MyV3AudioUnit5.self
         AUAudioUnit.registerSubclass(ModPlayerAudioUnit.self,
                                      as:        compDesc,
                                      name:      "ModPlayerAudioUnit",   // "My3AudioUnit5" my AUAudioUnit subclass
@@ -140,8 +124,6 @@ class MainViewController: UIViewController {
     func audioStart() {
         do {
             try audioEngine.start()
-            // self.myInfoLabel1.text = "engine started"
-            // toneCount = 44100 / 2
             playing = true
             (myAUNode?.auAudioUnit as! ModPlayerAudioUnit).play()
             print("engine started")
